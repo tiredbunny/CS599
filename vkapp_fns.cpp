@@ -14,11 +14,11 @@
 void VkApp::destroyAllVulkanResources()
 {
     // @@
-    // vkDeviceWaitIdle(m_device);  // Uncomment this when you have an m_device created.
+    vkDeviceWaitIdle(m_device);  // Uncomment this when you have an m_device created.
 
     // Destroy all vulkan objects.
     // ...  All objects created on m_device must be destroyed before m_device.
-    //vkDestroyDevice(m_device, nullptr);
+    vkDestroyDevice(m_device, nullptr);
     vkDestroyInstance(m_instance, nullptr);
 }
 
@@ -34,7 +34,6 @@ void VkApp::createInstance(bool doApiDump)
     uint32_t countGLFWextensions{0};
     const char** reqGLFWextensions = glfwGetRequiredInstanceExtensions(&countGLFWextensions);
 
-    // @@
     // Append each GLFW required extension in reqGLFWextensions to reqInstanceExtensions
     // Print them out while your are at it
     printf("GLFW required extensions:\n");
@@ -56,11 +55,10 @@ void VkApp::createInstance(bool doApiDump)
     std::vector<VkLayerProperties> availableLayers(count);
     vkEnumerateInstanceLayerProperties(&count, availableLayers.data());
 
-    // @@
     // Print out the availableLayers
     printf("InstanceLayer count: %d\n", count);
     // ...  use availableLayers[i].layerName
-    for (auto layer : availableLayers)
+    for (auto& layer : availableLayers)
     {
         printf("%s\n", layer.layerName);
     }
@@ -69,11 +67,10 @@ void VkApp::createInstance(bool doApiDump)
     std::vector<VkExtensionProperties> availableExtensions(count);
     vkEnumerateInstanceExtensionProperties(nullptr, &count, availableExtensions.data());
 
-    // @@
     // Print out the availableExtensions
     printf("InstanceExtensions count: %d\n", count);
     // ...  use availableExtensions[i].extensionName
-    for (auto extension : availableExtensions)
+    for (auto& extension : availableExtensions)
     {
         printf("%s\n", extension.extensionName);
     }
@@ -95,14 +92,14 @@ void VkApp::createInstance(bool doApiDump)
 
     throwIfFailed(vkCreateInstance(&instanceCreateInfo, nullptr, &m_instance));
 
-
-    // @@
-    // Verify VkResult is VK_SUCCESS
     // Document with a cut-and-paste of the three list printouts above.
-    //GLFW required extensions:
-    //VK_KHR_surface
+    //    GLFW required extensions:
+    // 
+    //    VK_KHR_surface
     //    VK_KHR_win32_surface
+    // 
     //    InstanceLayer count : 10
+    // 
     //    VK_LAYER_NV_optimus
     //    VK_LAYER_VALVE_steam_overlay
     //    VK_LAYER_VALVE_steam_fossilize
@@ -113,7 +110,9 @@ void VkApp::createInstance(bool doApiDump)
     //    VK_LAYER_LUNARG_monitor
     //    VK_LAYER_LUNARG_screenshot
     //    VK_LAYER_KHRONOS_profiles
+    // 
     //    InstanceExtensions count : 16
+    // 
     //    VK_KHR_device_group_creation
     //    VK_KHR_display
     //    VK_KHR_external_fence_capabilities
@@ -130,7 +129,6 @@ void VkApp::createInstance(bool doApiDump)
     //    VK_EXT_direct_mode_display
     //    VK_EXT_swapchain_colorspace
     //    VK_NV_external_memory_capabilities
-    // To destroy: vkDestroyInstance(m_instance, nullptr);
 }
 
 void VkApp::createPhysicalDevice()
@@ -146,7 +144,8 @@ void VkApp::createPhysicalDevice()
     int i = 0;
 
     // For each GPU:
-    for (auto physicalDevice : physicalDevices) {
+    for (auto physicalDevice : physicalDevices) 
+    {
 
         // Get the GPU's properties
         VkPhysicalDeviceProperties GPUproperties;
@@ -158,6 +157,36 @@ void VkApp::createPhysicalDevice()
         std::vector<VkExtensionProperties> extensionProperties(extCount);
         vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr,
                                              &extCount, extensionProperties.data());
+        
+
+        if (GPUproperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        {
+          
+            bool isCompatible = false;
+            for (auto& reqExtension : reqDeviceExtensions)
+            {
+                isCompatible = false;
+                for (auto& extensionProperty : extensionProperties)
+                {
+                    if (strcmp(reqExtension, extensionProperty.extensionName) == 0)
+                    {
+                        isCompatible = true;
+                    }
+                }
+
+                //missing one of the required extension
+                if (!isCompatible)
+                    break;
+                
+            }
+
+            //return the first compatible device
+            if (isCompatible)
+            {
+                m_physicalDevice = physicalDevice;
+                return;
+            }
+        }
 
         // @@ This code is in a loop iterating variable physicalDevice
         // through a list of all physicalDevices.  The
@@ -180,6 +209,10 @@ void VkApp::createPhysicalDevice()
         //    raise an exception of none were found
         //    tell me all about your system if more than one was found.
     }
+
+
+    //not found
+    throw std::exception();
   
 }
 
@@ -196,12 +229,63 @@ void VkApp::chooseQueueIndex()
     // @@ Use the api_dump to document the results of the above two
     // step.  How many queue families does your Vulkan offer.  Which
     // of them, by index, has the above three required flags?
+
+    //3 Queue families in my machine. Index 0 queue family has all the required flags.
+
+    //Thread 0, Frame 0:
+    //    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties) returns void :
+    //    physicalDevice : VkPhysicalDevice = 000001D5E994BEF0
+    //    pQueueFamilyPropertyCount : uint32_t * = 3
+    //    pQueueFamilyProperties : VkQueueFamilyProperties * = NULL
+
+    //    Thread 0, Frame 0 :
+    //    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties) returns void :
+    //    physicalDevice : VkPhysicalDevice = 000001D5E994BEF0
+    //    pQueueFamilyPropertyCount : uint32_t * = 3
+    //    pQueueFamilyProperties : VkQueueFamilyProperties * = 000001D5E9769230
+    //    pQueueFamilyProperties[0] : VkQueueFamilyProperties = 000001D5E9769230 :
+    //    queueFlags : VkQueueFlags = 15 (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT)
+    //    queueCount : uint32_t = 16
+    //    timestampValidBits : uint32_t = 64
+    //    minImageTransferGranularity : VkExtent3D = 000001D5E976923C :
+    //    width : uint32_t = 1
+    //    height : uint32_t = 1
+    //    depth : uint32_t = 1
+    //    pQueueFamilyProperties[1] : VkQueueFamilyProperties = 000001D5E9769248 :
+    //    queueFlags : VkQueueFlags = 12 (VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT)
+    //    queueCount : uint32_t = 2
+    //    timestampValidBits : uint32_t = 64
+    //    minImageTransferGranularity : VkExtent3D = 000001D5E9769254 :
+    //    width : uint32_t = 1
+    //    height : uint32_t = 1
+    //    depth : uint32_t = 1
+    //    pQueueFamilyProperties[2] : VkQueueFamilyProperties = 000001D5E9769260 :
+    //    queueFlags : VkQueueFlags = 14 (VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT)
+    //    queueCount : uint32_t = 8
+    //    timestampValidBits : uint32_t = 64
+    //    minImageTransferGranularity : VkExtent3D = 000001D5E976926C :
+    //    width : uint32_t = 1
+    //    height : uint32_t = 1
+    //    depth : uint32_t = 1
+
+    
     
     //@@ Search the list for (the index of) the first queue family that has the required flags.
     // Verity that your search choose the correct queue family.
     // Record the index in m_graphicsQueueIndex.
     // Nothing to destroy as m_graphicsQueueIndex is just an integer.
     //m_graphicsQueueIndex = you chosen index;
+
+    for (uint i = 0; i < queueProperties.size(); ++i)
+    {
+        if ((queueProperties[i].queueFlags & requiredQueueFlags) == requiredQueueFlags)
+        {
+            m_graphicsQueueIndex = i;
+            break;
+        }
+    }
+
+    printf("m_graphicsQueueIndex = %d\n", m_graphicsQueueIndex);
 }
 
 
@@ -215,22 +299,24 @@ void VkApp::createDevice()
     // structure point up to the previous structure.
     
     VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeature{
-        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR};
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR, nullptr};
     
     VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature{
-        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR};
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR, &rtPipelineFeature};
     
     VkPhysicalDeviceVulkan13Features features13{
-        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES};
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES, &accelFeature};
     
     VkPhysicalDeviceVulkan12Features features12{
-        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, &features13};
     
     VkPhysicalDeviceVulkan11Features features11{
-        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES};
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES, &features12};
     
     VkPhysicalDeviceFeatures2 features2{
-        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, &features11};
+
+    
 
     // Fill in all structures on the pNext chain
     vkGetPhysicalDeviceFeatures2(m_physicalDevice, &features2);
@@ -256,7 +342,7 @@ void VkApp::createDevice()
     deviceCreateInfo.enabledExtensionCount   = static_cast<uint32_t>(reqDeviceExtensions.size());
     deviceCreateInfo.ppEnabledExtensionNames = reqDeviceExtensions.data();
 
-    vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_device);
+    throwIfFailed(vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_device));
     // @@
     // Verify VK_SUCCESS
     // To destroy: vkDestroyDevice(m_device, nullptr);

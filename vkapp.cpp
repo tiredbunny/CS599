@@ -28,25 +28,26 @@ constexpr integral align_up(integral x, size_t a) noexcept
 
 VkApp::VkApp(App* _app) : app(_app)
 {
-     createInstance(true);
+     createInstance(app->doApiDump);
      assert (m_instance);
      createPhysicalDevice(); // i.e. the GPU
      chooseQueueIndex();
      createDevice();
-    // getCommandQueue();
+     getCommandQueue();
 
-    // loadExtensions();
+     loadExtensions();
 
-    // getSurface();
-    // createCommandPool();
-    //
-    // createSwapchain();
-    // createDepthResource();
-    // createPostRenderPass();
-    // createPostFrameBuffers();
+     getSurface();
+     createCommandPool();
 
-    //// createPostDescriptor();
-    // createPostPipeline();
+    
+     createSwapchain();
+    createDepthResource();
+     createPostRenderPass();
+     createPostFrameBuffers();
+
+    // createPostDescriptor();
+     createPostPipeline();
 
     // #ifdef GUI
     // initGUI();
@@ -80,27 +81,29 @@ VkApp::VkApp(App* _app) : app(_app)
 
 void VkApp::drawFrame()
 {        
-    //prepareFrame();
+    prepareFrame();
     
-    //VkCommandBufferBeginInfo beginInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-    //beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    //vkBeginCommandBuffer(m_commandBuffer, &beginInfo);
+    VkCommandBufferBeginInfo beginInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(m_commandBuffer, &beginInfo);
+
     {   // Extra indent for recording commands into m_commandBuffer
+       
         //updateCameraBuffer();
-        
-        // Draw scene
+        //
+        //// Draw scene
         // if (useRaytracer) {
-        //     raytrace();`
+        //     raytrace();
         //     denoise(); }
         // else {
         //     rasterize(); }
+        //
+        postProcess(); //  tone mapper and output to swapchain image.
         
-        //postProcess(); //  tone mapper and output to swapchain image.
-        
-        // vkEndCommandBuffer(m_commandBuffer);
+         vkEndCommandBuffer(m_commandBuffer);
     }   // Done recording;  Execute!
     
-        //submitFrame();  // Submit for display
+        submitFrame();  // Submit for display
 }
 
 VkAccessFlags accessFlagsForImageLayout(VkImageLayout layout)
@@ -148,49 +151,49 @@ VkPipelineStageFlags pipelineStageForLayout(VkImageLayout layout)
         }
 }
 
-//-------------------------------------------------------------------------------------------------
-// Post processing pass: tone mapper, UI
-void VkApp::postProcess()
-{
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].color        = {{1,1,1,1}};
-    clearValues[1].depthStencil = {1.0f, 0};
-            
-    VkRenderPassBeginInfo _i{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
-    _i.clearValueCount = 2;
-    _i.pClearValues    = clearValues.data();
-    _i.renderPass      = m_postRenderPass;
-    _i.framebuffer     = m_framebuffers[m_swapchainIndex];
-    _i.renderArea      = {{0, 0}, windowSize};
-    vkCmdBeginRenderPass(m_commandBuffer, &_i, VK_SUBPASS_CONTENTS_INLINE);
-    {   // extra indent for renderpass commands
-        VkViewport viewport{0.0f, 0.0f,
-            static_cast<float>(windowSize.width), static_cast<float>(windowSize.height),
-            0.0f, 1.0f};
-        vkCmdSetViewport(m_commandBuffer, 0, 1, &viewport);
-        
-        VkRect2D scissor{{0, 0}, {windowSize.width, windowSize.height}};
-        vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
-
-        auto aspectRatio = static_cast<float>(windowSize.width)
-            / static_cast<float>(windowSize.height);
-        vkCmdPushConstants(m_commandBuffer, m_postPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                           sizeof(float), &aspectRatio);
-        vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_postPipeline);
-        vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                m_postPipelineLayout, 0, 0, nullptr, 0, nullptr);
-
-        // Weird! This draws 3 vertices but with no vertices/triangles buffers bound in.
-        // Hint: The vertex shader fabricates vertices from gl_VertexIndex
-        vkCmdDraw(m_commandBuffer, 3, 1, 0, 0);
-
-        #ifdef GUI
-        ImGui::Render();  // Rendering UI
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_commandBuffer);
-        #endif
-    }
-    vkCmdEndRenderPass(m_commandBuffer);
-}
+////-------------------------------------------------------------------------------------------------
+//// Post processing pass: tone mapper, UI
+//void VkApp::postProcess()
+//{
+//    std::array<VkClearValue, 2> clearValues{};
+//    clearValues[0].color        = {{1,1,1,1}};
+//    clearValues[1].depthStencil = {1.0f, 0};
+//            
+//    VkRenderPassBeginInfo _i{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+//    _i.clearValueCount = 2;
+//    _i.pClearValues    = clearValues.data();
+//    _i.renderPass      = m_postRenderPass;
+//    _i.framebuffer     = m_framebuffers[m_swapchainIndex];
+//    _i.renderArea      = {{0, 0}, windowSize};
+//    vkCmdBeginRenderPass(m_commandBuffer, &_i, VK_SUBPASS_CONTENTS_INLINE);
+//    {   // extra indent for renderpass commands
+//        VkViewport viewport{0.0f, 0.0f,
+//            static_cast<float>(windowSize.width), static_cast<float>(windowSize.height),
+//            0.0f, 1.0f};
+//        vkCmdSetViewport(m_commandBuffer, 0, 1, &viewport);
+//        
+//        VkRect2D scissor{{0, 0}, {windowSize.width, windowSize.height}};
+//        vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
+//
+//        auto aspectRatio = static_cast<float>(windowSize.width)
+//            / static_cast<float>(windowSize.height);
+//        vkCmdPushConstants(m_commandBuffer, m_postPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+//                           sizeof(float), &aspectRatio);
+//        vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_postPipeline);
+//        vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                                m_postPipelineLayout, 0, 0, nullptr, 0, nullptr);
+//
+//        // Weird! This draws 3 vertices but with no vertices/triangles buffers bound in.
+//        // Hint: The vertex shader fabricates vertices from gl_VertexIndex
+//        vkCmdDraw(m_commandBuffer, 3, 1, 0, 0);
+//
+//        #ifdef GUI
+//        ImGui::Render();  // Rendering UI
+//        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_commandBuffer);
+//        #endif
+//    }
+//    vkCmdEndRenderPass(m_commandBuffer);
+//}
 
 
 VkCommandBuffer VkApp::createTempCmdBuffer()

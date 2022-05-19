@@ -20,11 +20,115 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="app.cpp" />
+    <ClCompile Include="descriptor_wrap.cpp" />
     <ClCompile Include="vkapp.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="extensions_vk.cpp" />
     <ClCompile Include="vkapp_fns.cpp" />
     <ClCompile Include="vkapp_fns_continued-p1.cpp" />
+    <ClCompile Include="vkapp_loadModel.cpp" />
+    <ClCompile Include="vkapp_scanline.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="shaders\post.vert">
+      <FileType>Document</FileType>
+      <LinkObjects>false</LinkObjects>
+      <AdditionalInputs>shaders\shared_structs.h</AdditionalInputs>
+      <Command>cmd /C "if exist %(Identity)    %VULKAN_SDK%/Bin/glslangValidator.exe -V -o spv\%(Filename)%(Extension).spv   %(Identity)"</Command>
+      <Message>Compiling shader %(Identity)</Message>
+      <Outputs>spv\%(Filename)%(Extension).spv</Outputs>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="shaders\post.frag">
+      <FileType>Document</FileType>
+      <LinkObjects>false</LinkObjects>
+      <AdditionalInputs>shaders\shared_structs.h</AdditionalInputs>
+      <Command>cmd /C "if exist %(Identity)    %VULKAN_SDK%/Bin/glslangValidator.exe -V -o spv\%(Filename)%(Extension).spv   %(Identity)"</Command>
+      <Message>Compiling shader %(Identity)</Message>
+      <Outputs>spv\%(Filename)%(Extension).spv</Outputs>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="shaders\scanline.vert">
+      <FileType>Document</FileType>
+      <LinkObjects>false</LinkObjects>
+      <AdditionalInputs>shaders\shared_structs.h</AdditionalInputs>
+      <Command>cmd /C "if exist %(Identity)    %VULKAN_SDK%/Bin/glslangValidator.exe -V -o spv\%(Filename)%(Extension).spv   %(Identity)"</Command>
+      <Message>Compiling shader %(Identity)</Message>
+      <Outputs>spv\%(Filename)%(Extension).spv</Outputs>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="shaders\scanline.frag">
+      <FileType>Document</FileType>
+      <LinkObjects>false</LinkObjects>
+      <AdditionalInputs>shaders\shared_structs.h</AdditionalInputs>
+      <Command>cmd /C "if exist %(Identity)    %VULKAN_SDK%/Bin/glslangValidator.exe -V -o spv\%(Filename)%(Extension).spv   %(Identity)"</Command>
+      <Message>Compiling shader %(Identity)</Message>
+      <Outputs>spv\%(Filename)%(Extension).spv</Outputs>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="shaders\denoiseX.comp">
+      <FileType>Document</FileType>
+      <LinkObjects>false</LinkObjects>
+      <AdditionalInputs>shaders\shared_structs.h</AdditionalInputs>
+      <Command>cmd /C "if exist %(Identity)    %VULKAN_SDK%/Bin/glslangValidator.exe -V -o spv\%(Filename)%(Extension).spv   %(Identity)"</Command>
+      <Message>Compiling shader %(Identity)</Message>
+      <Outputs>spv\%(Filename)%(Extension).spv</Outputs>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="shaders\denoiseY.comp">
+      <FileType>Document</FileType>
+      <LinkObjects>false</LinkObjects>
+      <AdditionalInputs>shaders\shared_structs.h</AdditionalInputs>
+      <Command>cmd /C "if exist %(Identity)    %VULKAN_SDK%/Bin/glslangValidator.exe -V -o spv\%(Filename)%(Extension).spv   %(Identity)"</Command>
+      <Message>Compiling shader %(Identity)</Message>
+      <Outputs>spv\%(Filename)%(Extension).spv</Outputs>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="shaders\raytrace.rchit">
+      <FileType>Document</FileType>
+      <LinkObjects>false</LinkObjects>
+      <AdditionalInputs>shaders\shared_structs.h</AdditionalInputs>
+      <Command>cmd /C "if exist %(Identity)    %VULKAN_SDK%/Bin/glslangValidator.exe -V -o spv\%(Filename)%(Extension).spv   %(Identity)"</Command>
+      <Message>Compiling shader %(Identity)</Message>
+      <Outputs>spv\%(Filename)%(Extension).spv</Outputs>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="shaders\raytrace.rgen">
+      <FileType>Document</FileType>
+      <LinkObjects>false</LinkObjects>
+      <AdditionalInputs>shaders\shared_structs.h</AdditionalInputs>
+      <Command>cmd /C "if exist %(Identity)    %VULKAN_SDK%/Bin/glslangValidator.exe -V -o spv\%(Filename)%(Extension).spv   %(Identity)"</Command>
+      <Message>Compiling shader %(Identity)</Message>
+      <Outputs>spv\%(Filename)%(Extension).spv</Outputs>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="shaders\raytrace.rmiss">
+      <FileType>Document</FileType>
+      <LinkObjects>false</LinkObjects>
+      <AdditionalInputs>shaders\shared_structs.h</AdditionalInputs>
+      <Command>cmd /C "if exist %(Identity)    %VULKAN_SDK%/Bin/glslangValidator.exe -V -o spv\%(Filename)%(Extension).spv   %(Identity)"</Command>
+      <Message>Compiling shader %(Identity)</Message>
+      <Outputs>spv\%(Filename)%(Extension).spv</Outputs>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="shaders\raytraceShadow.rchit">
+      <FileType>Document</FileType>
+      <LinkObjects>false</LinkObjects>
+      <AdditionalInputs>shaders\shared_structs.h</AdditionalInputs>
+      <Command>cmd /C "if exist %(Identity)    %VULKAN_SDK%/Bin/glslangValidator.exe -V -o spv\%(Filename)%(Extension).spv   %(Identity)"</Command>
+      <Message>Compiling shader %(Identity)</Message>
+      <Outputs>spv\%(Filename)%(Extension).spv</Outputs>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+    <CustomBuild Include="shaders\raytraceShadow.rmiss">
+      <FileType>Document</FileType>
+      <LinkObjects>false</LinkObjects>
+      <AdditionalInputs>shaders\shared_structs.h</AdditionalInputs>
+      <Command>cmd /C "if exist %(Identity)    %VULKAN_SDK%/Bin/glslangValidator.exe -V -o spv\%(Filename)%(Extension).spv   %(Identity)"</Command>
+      <Message>Compiling shader %(Identity)</Message>
+      <Outputs>spv\%(Filename)%(Extension).spv</Outputs>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="app.h" />
@@ -141,6 +245,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(VULKAN_SDK)\Lib\vulkan-1.lib;$(ProjectDir)..\libs\assimp\64\assimp.lib;$(ProjectDir)..\libs\glfw-3.3.2.bin.WIN64\lib-vc2019\glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Message>Copy assimp library to the exe file's positon.</Message>
+      <Command>xcopy ..\libs\assimp\64\assimp.dll .   /Y   /D</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -161,6 +269,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(VULKAN_SDK)\Lib\vulkan-1.lib;$(ProjectDir)..\libs\assimp\64\assimp.lib;$(ProjectDir)..\libs\glfw-3.3.2.bin.WIN64\lib-vc2019\glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Message>What goes here?</Message>
+      <Command>xcopy ..\libs\assimp\64\assimp.dll .   /Y   /D</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

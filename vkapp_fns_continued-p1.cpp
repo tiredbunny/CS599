@@ -44,9 +44,9 @@ void VkApp::getSurface()
 
     assert(isSupported == VK_TRUE);
 
-    // @@ Verify VK_SUCCESS from both the glfw... and the vk... calls.
-    // @@ Verify isSupported==VK_TRUE, meaning that Vulkan supports presenting on this surface.
-    //To destroy: vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+    //  Verify VK_SUCCESS from both the glfw... and the vk... calls.
+    //  Verify isSupported==VK_TRUE, meaning that Vulkan supports presenting on this surface.
+    //To destroy: vkDestroySurfaceKHR(m_instance, m_surface, nullptr); ->added
 }
 
 // Create a command pool, used to allocate command buffers, which in
@@ -60,8 +60,8 @@ void VkApp::createCommandPool()
     poolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     poolCreateInfo.queueFamilyIndex = m_graphicsQueueIndex;
     throwIfFailed(vkCreateCommandPool(m_device, &poolCreateInfo, nullptr, &m_cmdPool));
-    // @@ Verify VK_SUCCESS
-    // To destroy: vkDestroyCommandPool(m_device, m_cmdPool, nullptr);
+    //  Verify VK_SUCCESS
+    // To destroy: vkDestroyCommandPool(m_device, m_cmdPool, nullptr); ->added
     
     // Create a command buffer
     VkCommandBufferAllocateInfo allocateInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
@@ -69,7 +69,7 @@ void VkApp::createCommandPool()
     allocateInfo.commandBufferCount = 1;
     allocateInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     throwIfFailed(vkAllocateCommandBuffers(m_device, &allocateInfo, &m_commandBuffer));
-    // @@ Verify VK_SUCCESS
+    // Verify VK_SUCCESS
     // Nothing to destroy -- the pool owns the command buffer.
 }
  
@@ -85,7 +85,7 @@ void VkApp::createSwapchain()
     VkSurfaceCapabilitiesKHR capabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, m_surface, &capabilities);
 
-    // @@  Roll your own two step process to retrieve a list of present mode into
+    //  Roll your own two step process to retrieve a list of present mode into
     //  by making two calls to
     uint32_t pmCount;
     vkGetPhysicalDeviceSurfacePresentModesKHR(m_physicalDevice, m_surface, &pmCount, nullptr);
@@ -93,7 +93,7 @@ void VkApp::createSwapchain()
     vkGetPhysicalDeviceSurfacePresentModesKHR(m_physicalDevice, m_surface, &pmCount, presentModes.data());
 
 
-    // @@ Document your preset modes. I especially want to know if
+    // Document your preset modes. I especially want to know if
     // your system offers VK_PRESENT_MODE_MAILBOX_KHR mode.  My
     // high-end windows desktop does; My higher-end Linux laptop
     // doesn't.
@@ -114,21 +114,21 @@ void VkApp::createSwapchain()
 
     // Choose VK_PRESENT_MODE_FIFO_KHR as a default (this must be supported)
     VkPresentModeKHR swapchainPresentMode = VK_PRESENT_MODE_MAILBOX_KHR; // Support is required.
-    // @@ But choose VK_PRESENT_MODE_MAILBOX_KHR if it can be found in
+    // But choose VK_PRESENT_MODE_MAILBOX_KHR if it can be found in
     // the retrieved presentModes Several Vulkan tutorials opine that
     // MODE_MAILBOX is the premier mode, but this may not be best for
     // us -- expect more about this later.
   
 
     // Get the list of VkFormat's that are supported:
-    //@@ Do the two step process to retrieve a list of surface formats in
+    // Do the two step process to retrieve a list of surface formats in
     // with two calls to
     uint32_t formatCount;
     vkGetPhysicalDeviceSurfaceFormatsKHR(m_physicalDevice, m_surface, &formatCount, nullptr);
 	std::vector<VkSurfaceFormatKHR> formats(formatCount);
     vkGetPhysicalDeviceSurfaceFormatsKHR(m_physicalDevice, m_surface, &formatCount, formats.data());
 
-    // @@ Document the list you get.
+    // Document the list you get.
  /*   Thread 0, Frame 0:
     vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, pSurfaceFormatCount, pSurfaceFormats) returns VkResult VK_SUCCESS(0) :
         physicalDevice : VkPhysicalDevice = 000001AB99B525D0
@@ -148,12 +148,12 @@ void VkApp::createSwapchain()
 
     //VkFormat surfaceFormat       = VK_FORMAT_UNDEFINED;               // Temporary value.
     //VkColorSpaceKHR surfaceColor = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR; // Temporary value
-    // @@ Replace the above two temporary lines with the following two
+    //  Replace the above two temporary lines with the following two
     // to choose the first format and its color space as defaults:
      VkFormat surfaceFormat = formats[0].format;
      VkColorSpaceKHR surfaceColor  = formats[0].colorSpace;
 
-    // @@ Then search the formats (from several lines up) to choose
+    // Then search the formats (from several lines up) to choose
     // format VK_FORMAT_B8G8R8A8_UNORM (and its color space) if such
     // exists.  Document your list of formats/color-spaces, and your
     // particular choice.
@@ -188,7 +188,7 @@ void VkApp::createSwapchain()
     // Test against valid size, typically hit when windows are minimized.
     // The app must prevent triggering this code in such a case
     assert(swapchainExtent.width && swapchainExtent.height);
-    // @@ If this assert fires, we have some work to do to better deal
+    // If this assert fires, we have some work to do to better deal
     // with the situation.
 
     // Choose the number of swap chain images, within the bounds supported.
@@ -224,12 +224,11 @@ void VkApp::createSwapchain()
     _i.clipped                  = true;
 
     throwIfFailed(vkCreateSwapchainKHR(m_device, &_i, nullptr, &m_swapchain));
-    // @@ Verify VK_SUCCESS
+    //  Verify VK_SUCCESS
     
-    //@@ Do the two step process to retrieve the list of (3) swapchain images
+    //Do the two step process to retrieve the list of (3) swapchain images
     //   m_swapchainImages (of type std::vector<VkImage>)
     // with two calls to
-    //uint32_t scImageCount;
     throwIfFailed(vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_imageCount, nullptr));
     m_swapchainImages.resize(m_imageCount);
     throwIfFailed(vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_imageCount, m_swapchainImages.data()));
@@ -311,14 +310,13 @@ void VkApp::createSwapchain()
     //NAME(m_queue, VK_OBJECT_TYPE_QUEUE, "m_queue");
         
     windowSize = swapchainExtent;
-    // To destroy:  Complete and call function destroySwapchain
+    // To destroy:  Complete and call function destroySwapchain ->done
 }
 
 void VkApp::destroySwapchain()
 {
     vkDeviceWaitIdle(m_device);
 
-    // @@
     // Destroy all (3)  m_imageView'Ss with vkDestroyImageView(m_device, imageView, nullptr)
 
     for (auto& imageView : m_imageViews)
@@ -355,7 +353,7 @@ void VkApp::createDepthResource()
     m_depthImage.imageView = createImageView(m_depthImage.image,
                                              VK_FORMAT_X8_D24_UNORM_PACK32,
                                              VK_IMAGE_ASPECT_DEPTH_BIT);
-    // To destroy: m_depthImage.destroy(m_device);
+    // To destroy: m_depthImage.destroy(m_device); ->done
 }
 
 // Gets a list of memory types supported by the GPU, and search
@@ -492,7 +490,7 @@ void VkApp::createPostRenderPass()
     renderPassInfo.pDependencies   = subpassDependencies.data();
 
     vkCreateRenderPass(m_device, &renderPassInfo, nullptr, &m_postRenderPass);
-    // To destroy: vkDestroyRenderPass(m_device, m_postRenderPass, nullptr);
+    // To destroy: vkDestroyRenderPass(m_device, m_postRenderPass, nullptr); ->done
 }
 
 // A VkFrameBuffer wraps several images into a render target --
@@ -521,7 +519,7 @@ void VkApp::createPostFrameBuffers()
         throwIfFailed(vkCreateFramebuffer(m_device, &_ci, nullptr, &m_framebuffers[i])); 
     }
 
-    // To destroy: In a loop, call: vkDestroyFramebuffer(m_device, m_framebuffers[i], nullptr);
+    // To destroy: In a loop, call: vkDestroyFramebuffer(m_device, m_framebuffers[i], nullptr); ->done
     // Verify success
 }
 
@@ -541,8 +539,8 @@ void VkApp::createPostPipeline()
     //createInfo.pPushConstantRanges    = &pushConstantRanges;
     
     // What we can do now as a first pass:
-    createInfo.setLayoutCount         = 0;
-    createInfo.pSetLayouts            = nullptr;
+    createInfo.setLayoutCount = 1;
+    createInfo.pSetLayouts = &m_postDesc.descSetLayout;
     createInfo.pushConstantRangeCount = 0;
     createInfo.pPushConstantRanges    = nullptr;
     
@@ -664,15 +662,15 @@ void VkApp::createPostPipeline()
 
     // The pipeline has fully compiled copies of the shaders, so these
     // intermediate (SPV) versions can be destroyed.
-    // @@
+    // 
     // For the two modules fragShaderModule and vertShaderModule
     // destroy right *here* via vkDestroyShaderModule(m_device, ..., nullptr);
 
     vkDestroyShaderModule(m_device, fragShaderModule, nullptr);
     vkDestroyShaderModule(m_device, vertShaderModule, nullptr);
     
-    // To destroy:  vkDestroyPipelineLayout(m_device, m_postPipelineLayout, nullptr);
-    //  and:        vkDestroyPipeline(m_device, m_postPipeline, nullptr);
+    // To destroy:  vkDestroyPipelineLayout(m_device, m_postPipelineLayout, nullptr); ->done
+    //  and:        vkDestroyPipeline(m_device, m_postPipeline, nullptr); ->done
     // Document the vkCreateGraphicsPipelines call with an api_dump.  
 
     //Thread 0, Frame 0:
@@ -869,6 +867,10 @@ void VkApp::postProcess()
             / static_cast<float>(windowSize.height);
         //vkCmdPushConstants(m_commandBuffer, m_postPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,
         //                   sizeof(float), &aspectRatio);
+
+        vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+            m_postPipelineLayout, 0, 1, &m_postDesc.descSet, 0, nullptr);
+
         vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_postPipeline);
         //vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
         //                       m_postPipelineLayout, 0, 0, nullptr, 0, nullptr);

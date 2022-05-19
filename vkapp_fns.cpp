@@ -13,11 +13,33 @@
 
 void VkApp::destroyAllVulkanResources()
 {
-    // @@
     vkDeviceWaitIdle(m_device);  // Uncomment this when you have an m_device created.
 
     // Destroy all vulkan objects.
     // ...  All objects created on m_device must be destroyed before m_device.
+
+    for (auto& t : m_objText)
+        t.destroy(m_device); 
+
+    for (auto& ob : m_objData)
+    {
+        ob.indexBuffer.destroy(m_device);
+        ob.vertexBuffer.destroy(m_device);
+        ob.matColorBuffer.destroy(m_device);
+        ob.matIndexBuffer.destroy(m_device);
+    }
+
+
+    vkDestroyPipelineLayout(m_device, m_scanlinePipelineLayout, nullptr);
+    vkDestroyPipeline(m_device, m_scanlinePipeline, nullptr);
+
+    m_scDesc.destroy(m_device);
+    vkDestroyRenderPass(m_device, m_scanlineRenderPass, nullptr);
+    vkDestroyFramebuffer(m_device, m_scanlineFramebuffer, nullptr);
+    m_objDescriptionBW.destroy(m_device);
+    m_matrixBW.destroy(m_device);
+    m_postDesc.destroy(m_device);
+    m_scImageBuffer.destroy(m_device);
 
     vkDestroyPipelineLayout(m_device, m_postPipelineLayout, nullptr);
     vkDestroyPipeline(m_device, m_postPipeline, nullptr);
@@ -202,7 +224,7 @@ void VkApp::createPhysicalDevice()
             }
         }
 
-        // @@ This code is in a loop iterating variable physicalDevice
+        // This code is in a loop iterating variable physicalDevice
         // through a list of all physicalDevices.  The
         // physicalDevice's properties (GPUproperties) and a list of
         // its extension properties (extensionProperties) are retrieve
@@ -240,7 +262,7 @@ void VkApp::chooseQueueIndex()
     std::vector<VkQueueFamilyProperties> queueProperties(mpCount);
     vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &mpCount, queueProperties.data());
 
-    // @@ Use the api_dump to document the results of the above two
+    //  Use the api_dump to document the results of the above two
     // step.  How many queue families does your Vulkan offer.  Which
     // of them, by index, has the above three required flags?
 
@@ -284,7 +306,7 @@ void VkApp::chooseQueueIndex()
 
     
     
-    //@@ Search the list for (the index of) the first queue family that has the required flags.
+    // Search the list for (the index of) the first queue family that has the required flags.
     // Verity that your search choose the correct queue family.
     // Record the index in m_graphicsQueueIndex.
     // Nothing to destroy as m_graphicsQueueIndex is just an integer.
@@ -305,7 +327,7 @@ void VkApp::chooseQueueIndex()
 
 void VkApp::createDevice()
 {
-    // @@
+    // 
     // Build a pNext chain of the following six "feature" structures:
     //   features2->features11->features12->features13->accelFeature->rtPipelineFeature->NULL
 
@@ -334,7 +356,7 @@ void VkApp::createDevice()
 
     // Fill in all structures on the pNext chain
     vkGetPhysicalDeviceFeatures2(m_physicalDevice, &features2);
-    // @@
+    // 
     // Document the whole filled in pNext chain using an api_dump
     // Examine all the many features.  Do any of them look familiar?
 
@@ -545,9 +567,9 @@ void VkApp::createDevice()
     deviceCreateInfo.ppEnabledExtensionNames = reqDeviceExtensions.data();
 
     throwIfFailed(vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_device));
-    // @@
+    // 
     // Verify VK_SUCCESS
-    // To destroy: vkDestroyDevice(m_device, nullptr);
+    // To destroy: vkDestroyDevice(m_device, nullptr); ->added
 }
 
 // That's all for now!

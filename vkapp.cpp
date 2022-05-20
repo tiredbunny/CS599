@@ -52,7 +52,7 @@ VkApp::VkApp(App* _app) : app(_app)
 	createScBuffer();
 	createPostDescriptor();
 	createPostPipeline();
-	myloadModel("models/living_room.obj", glm::mat4()); //Something to DO
+	myloadModel("models/living_room.obj", glm::mat4()); //Hope the list of lights thing is correct
 	createMatrixBuffer();
 	createObjDescriptionBuffer();
 	createScanlineRenderPass();

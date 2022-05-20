@@ -68,7 +68,7 @@ void VkApp::myloadModel(const std::string& filename, glm::mat4 transform)
     printf("matIndx: %ld\n", meshdata.matIndx.size());
     printf("textures: %ld\n", meshdata.textures.size());
     
-    // @@ Go though the list of meshdata.materials, find the ones that
+    //  Go though the list of meshdata.materials, find the ones that
     // are emitters, and scale the emission up by a factor of 5.  The
     // model's original values produce very dark image.  We will have
     // a better way to accomplish this later.
@@ -89,7 +89,18 @@ void VkApp::myloadModel(const std::string& filename, glm::mat4 transform)
     //   vertices in meshdata.vertices, indexed by [3*i], [3*i+1], [3*i+2]
     //   and a material in meshdata.materials, indexed by meshdata.matIndx[i]
 
+    for (uint32_t i = 0; i < meshdata.indicies.size(); i+=3)
+    {
+        if (i == meshdata.indicies.size() / 3)
+            break;
 
+        if (glm::all(glm::greaterThan(meshdata.materials[meshdata.matIndx[i]].emission,glm::vec3(0.0f, 0.0f, 0.0f))))
+        {
+            m_listLights.push_back(i);
+        }
+           
+    }
+    
     
     ObjData object;
     object.nbIndices  = static_cast<uint32_t>(meshdata.indicies.size());

@@ -158,6 +158,7 @@ public:
     std::vector<ObjDesc>  m_objDesc{};  // Device-addresses of those buffers
     std::vector<ImageWrap>  m_objText{};  // All textures of the scene
     std::vector<ObjInst>  m_objInst{};  // Instances paring an object and a transform
+    std::vector<uint32_t> m_listLights{}; //Triangle indices
     void myloadModel(const std::string& filename, glm::mat4 transform);
 
     BufferWrap m_objDescriptionBW{};  // Device buffer of the OBJ descriptions

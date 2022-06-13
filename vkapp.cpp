@@ -45,9 +45,9 @@ VkApp::VkApp(App* _app) : app(_app)
 	createPostRenderPass();
 	createPostFrameBuffers();
 
-    // #ifdef GUI
-    // initGUI();
-    // #endif
+#ifdef GUI
+	initGUI();
+#endif
 
 	createScBuffer();
 	createPostDescriptor();
@@ -58,6 +58,13 @@ VkApp::VkApp(App* _app) : app(_app)
 	createScanlineRenderPass();
 	createScDescriptorSet();
 	createScPipeline();
+
+    createRtBuffers();
+    initRayTracing();
+    createRtAccelerationStructure();
+    createRtDescriptorSet();
+    createRtPipeline();
+    createRtShaderBindingTable();
 
     // //init ray tracing capabilities
     // initRayTracing();
@@ -84,11 +91,13 @@ void VkApp::drawFrame()
         updateCameraBuffer();
         
         // Draw scene
-      /*   if (false) {
-             raytrace();
-             denoise(); }
-         else*/ {
-             rasterize(); }
+        if (useRaytracer) {
+            raytrace();
+            // denoise();
+        }
+        else {
+            rasterize();
+        }
         
         postProcess(); //  tone mapper and output to swapchain image.
         

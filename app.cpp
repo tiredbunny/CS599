@@ -23,6 +23,8 @@ void drawGUI(VkApp& VK)
 {
     ImGui::Text("Rate %.3f ms/frame (%.1f FPS)",
                 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+    ImGui::Checkbox("Ray Tracer mode", &VK.useRaytracer);
 }
 #endif
 
@@ -49,7 +51,7 @@ int main(int argc, char** argv)
         #ifdef GUI
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        if(app->m_show_gui)
+        //if(app->m_show_gui)
             drawGUI(VK);
         #endif
 

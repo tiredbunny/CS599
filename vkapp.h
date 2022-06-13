@@ -6,11 +6,11 @@
 //#include <vulkan/vulkan.hpp>  // A modern C++ API for Vulkan. Beware 14K lines of code
 
 // Imgui
-//#define GUI
+#define GUI
 #ifdef GUI
 #include "backends/imgui_impl_glfw.h"
 #include "imgui.h"
-#include "imgui_impl_vulkan.h"
+#include "backends/imgui_impl_vulkan.h"
 #endif
 
 #ifdef _WIN32
@@ -23,6 +23,8 @@
 #include "buffer_wrap.h"
 #include "image_wrap.h"
 #include "descriptor_wrap.h"
+
+#include "acceleration_wrap.h"
 
 //#include "raytracing_wrap.h"
 #define GLM_FORCE_RADIANS
@@ -174,7 +176,10 @@ public:
     BufferWrap m_matrixBW{};  // Device-Host of the camera matrices
     void   createMatrixBuffer();
     
-    //RaytracingBuilderKHR m_rtBuilder{};
+    BufferWrap m_scratch1; //New
+    BufferWrap m_scratch2; //New
+
+    RaytracingBuilderKHR m_rtBuilder{};
     float m_maxAnis = 0;
     PushConstantRay m_pcRay{};  // Push constant for ray tracer
     int m_num_atrous_iterations = 0;
@@ -184,14 +189,15 @@ public:
     uint32_t baseAlignment{};
     void initRayTracing();
 
-    // // Accelleration structure objects and functions
+     // Accelleration structure objects and functions
 
-    // //BlasInput objectToVkGeometryKHR(const ObjData& model);
-    // //void createBottomLevelAS(); void createTopLevelAS();
-    // void createRtAccelerationStructure();
+     BlasInput objectToVkGeometryKHR(const ObjData& model);
+     void createBottomLevelAS(); 
+     void createTopLevelAS();
+     void createRtAccelerationStructure();
 
-    // DescriptorWrap m_rtDesc{};
-    // void createRtDescriptorSet();
+     DescriptorWrap m_rtDesc{};
+     void createRtDescriptorSet();
 
     VkPipelineLayout                                  m_rtPipelineLayout{};
     VkPipeline                                        m_rtPipeline{};
@@ -247,11 +253,17 @@ public:
         return createStagedBufferWrap(cmdBuf, sizeof(T)*data.size(), data.data(), usage);
     }
     
+    void imageLayoutBarrier(VkCommandBuffer cmdbuffer,
+        VkImage image,
+        VkImageLayout oldImageLayout,
+        VkImageLayout newImageLayout,
+        VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
+
 
     BufferWrap createBufferWrap(VkDeviceSize size, VkBufferUsageFlags usage,
                                 VkMemoryPropertyFlags properties);
 
-     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     
     
     void transitionImageLayout(VkImage image, VkFormat format,

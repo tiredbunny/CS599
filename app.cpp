@@ -136,6 +136,9 @@ void App::updateCamera()
   
     myCamera.lmb   = glfwGetMouseButton(GLFW_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
         
+    glm::vec3 oldEye = myCamera.eye;
+    float oldSpin = myCamera.spin;
+
     if (glfwGetKey(GLFW_window, GLFW_KEY_W) == GLFW_PRESS)
         myCamera.eye += dist*glm::vec3(sin(myCamera.spin*rad), 0.0, -cos(myCamera.spin*rad));
     if (glfwGetKey(GLFW_window, GLFW_KEY_S) == GLFW_PRESS)
@@ -148,6 +151,15 @@ void App::updateCamera()
         myCamera.eye += dist*glm::vec3(0,-1,0);
     if (glfwGetKey(GLFW_window, GLFW_KEY_C) == GLFW_PRESS)
         myCamera.eye += dist*glm::vec3(0,1,0);
+
+    cameraMoved = false;
+
+    if (glm::any(glm::notEqual(oldEye, myCamera.eye)))
+        cameraMoved = true;
+
+    if (myCamera.lmb)
+        cameraMoved = true;
+
 }
 
 App::App(int argc, char** argv)

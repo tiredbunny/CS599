@@ -10,6 +10,8 @@ public:
     
     Camera myCamera;
     void updateCamera();
+
+    bool cameraMoved;
 };
 
 inline void throwIfFailed(VkResult v)

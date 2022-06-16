@@ -275,6 +275,12 @@ void VkApp::raytrace()
     m_pcRay.tempLightPos = vec4(0.5f, 2.5f, 3.0f, 0.0);
     m_pcRay.tempLightInt = vec4(2.5, 2.5, 2.5, 0.0);
     m_pcRay.tempAmbient = vec4(0.2);
+    m_pcRay.frameSeed = rand() % 32768;
+    m_pcRay.rr = 0.8f;
+    m_pcRay.depth = 1;
+    m_pcRay.cameraMoved = app->cameraMoved;
+    
+    while (float(rand()) / RAND_MAX < m_pcRay.rr)   m_pcRay.depth++;
 
     // Bind the ray tracing pipeline
     vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_rtPipeline);

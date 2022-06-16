@@ -77,7 +77,7 @@ void VkApp::myloadModel(const std::string& filename, glm::mat4 transform)
 
     for (auto& mat : meshdata.materials)
     {
-        mat.emission = mat.emission * glm::vec3(5.0f, 5.0f, 5.0f);
+        mat.emission = mat.emission * glm::vec3(2.0f, 2.0f, 2.0f);
     }
 
     // @@ The raytracer will eventually need a list of lights, that is

@@ -28,6 +28,9 @@ constexpr integral align_up(integral x, size_t a) noexcept
 
 VkApp::VkApp(App* _app) : app(_app)
 {
+    m_pcDenoise.n_threshold = 0.95f;
+    m_pcDenoise.d_threshold = 0.15f;
+
 	createInstance(app->doApiDump);
 	assert(m_instance);
 	createPhysicalDevice(); // i.e. the GPU

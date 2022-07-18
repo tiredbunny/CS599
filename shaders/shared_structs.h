@@ -12,6 +12,13 @@ using mat4 = glm::mat4;
 using uint = unsigned int;
 #endif
 
+#ifdef __cplusplus
+#define BOOL(name) bool name; bool pad##name[3] // C++ bool is 1 byte, so use 3 pad bytes
+#else
+#define BOOL(name) bool name // GLSL bool is 4 bytes.
+#endif
+
+
 // clang-format off
 #ifdef __cplusplus // Descriptor binding helper for C++ and GLSL
  #define START_ENUM(a) enum a {
@@ -84,7 +91,9 @@ struct PushConstantRay
 	float rr;
 	int depth;
 	uint frameSeed;
-  bool cameraMoved;
+  BOOL(cameraMoved);
+  BOOL(history);
+  int alignmentTest;
 
 	vec4 tempLightPos; // TEMPORARY � vec4(0.5f, 2.5f, 3.0f, 0.0);
 	vec4 tempLightInt; // TEMPORARY -- vec4(2.5, 2.5, 2.5, 0.0);
@@ -118,6 +127,9 @@ struct PushConstantDenoise
   float varianceFactor;
   float lumenFactor;
 
+  float n_threshold;
+  float d_threshold;
+
   int  dist;
   bool varianceView;
   bool placeholder1;
@@ -129,11 +141,13 @@ struct RayPayload
 {
 	bool hit; // Does the ray intersect anything or not?
 	vec3 hitPos; // The world coordinates of the hit point.
+  float hitDist;
+  
 	int instanceIndex; // Index of the object instance hit (we have only one, so =0)
 	int primitiveIndex; // Index of the hit triangle primitive within object
 	vec3 bc; // Barycentric coordinates of the hit point within triangle
-
   uint seed;
+
 
 };
 

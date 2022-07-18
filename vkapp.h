@@ -147,8 +147,19 @@ public:
     void createScBuffer();
     
     ImageWrap m_rtColCurrBuffer{}; 
+    ImageWrap m_rtNdCurrBuffer{};
+    ImageWrap m_rtKdCurrBuffer{};
+
+
+    ImageWrap m_rtColPrevBuffer{};
+    ImageWrap m_rtNdPrevBuffer{};
+
+    void CmdCopyImage(ImageWrap& src, ImageWrap& dst);
+
+
+
     ImageWrap m_rtColHistBuffer{};
-    ImageWrap m_rtPosCurrBuffer{};
+ //   ImageWrap m_rtPosCurrBuffer{};
     ImageWrap m_rtPosHistBuffer{};
     void createRtBuffers();
     

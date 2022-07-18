@@ -17,6 +17,10 @@ layout(push_constant) uniform _PushConstantRay { PushConstantRay pcRay; };
 // Ray tracing descriptor set: 0:acceleration structure, and 1: color output image
 layout(set=0, binding=0) uniform accelerationStructureEXT topLevelAS;
 layout(set=0, binding=1, rgba32f) uniform image2D colCurr; // Output image: m_rtColCurrBuffer
+layout(set=0, binding=2, rgba32f) uniform image2D colNormalDepth; // Output image: m_rtNdCurrBuffer
+layout(set=0, binding=3, rgba32f) uniform image2D colCurrFront; // Output image: m_rtKdCurrBuffer
+layout(set=0, binding=4, rgba32f) uniform image2D colPrev; // Output image: m_rtColPrevBuffer
+layout(set=0, binding=5, rgba32f) uniform image2D colPrevNormalDepth; // Output image: m_rtNdPrevBuffer
 
 // Object model descriptor set: 0: matrices, 1:object buffer addresses, 2: texture list
 layout(set=1, binding=0) uniform _MatrixUniforms { MatrixUniforms mats; };
@@ -112,6 +116,26 @@ float PdfBrdf(vec3 N, vec3 Wi)
     return NdotWi/PI;
 }
 
+void accumulateSample(vec3 firstNrm, float firstDepth, // Projected point’s normal and depth
+ ivec2 loc, // The pixel’s location (one of the four)
+ float bilinearWeight, // The pixel’s bilinear weight
+ inout vec4 sumC, inout float sumW // To receive the accumulated values
+ )
+ {
+    vec4 color = imageLoad(colPrev, ivec2(gl_LaunchIDEXT.xy));
+    vec4 nrmDepth = imageLoad(colPrevNormalDepth, ivec2(gl_LaunchIDEXT.xy));
+
+    float w = bilinearWeight;
+
+    if (dot(firstNrm, nrmDepth.xyz) < 0.95)
+        w = 0.0f;
+    if (abs(firstDepth - nrmDepth.w) > 0.15)
+        w = 0.0f;
+    
+    sumC += w*color;
+    sumW += w;
+ }
+
 
 void main() 
 {
@@ -147,6 +171,11 @@ void main()
     //       while (float(rand())/RAND_MAX < m_pcRay.rr)   m_pcRay.depth++;
 
 
+    vec3 firstPos;
+    vec3 firstNrm;
+    vec3 firstColor;
+    float firstDepth;
+
     for (int i=0; i< pcRay.depth;  i++) 
     {
         // Fire the ray;  hit or miss shaders will be invoked, passing results back in the payload
@@ -162,6 +191,7 @@ void main()
                     10000.0,              // ray max range
                     0                     // payload (location = 0)
                     );
+
 
         // If nothing was hit, output background color.
         if (!payload.hit) {
@@ -217,6 +247,15 @@ void main()
         vec3 N = normalize(nrm);  // Its normal
         vec3 Wi = SampleBrdf(payload.seed, N);
         vec3 Wo = -rayD;
+
+        
+        if (i == 0)
+        {
+            firstPos = P;
+            firstNrm = N;
+            firstColor = mat.diffuse;
+            firstDepth = payload.hitDist;
+        }
         
         // Color via a BRDF calculation
         vec3 f = EvalBrdf(N, Wi, Wo, mat);
@@ -233,18 +272,86 @@ void main()
 
     // @@Read, accumulate and write the value C into the proper image pixel
     vec4 oldColor;
-    oldColor = imageLoad(colCurr, ivec2(gl_LaunchIDEXT.xy));
-    // newN = ...
-    float newN = oldColor.w + 1;
-    // newAve = ...
-    vec3 newAve = (oldColor.xyz*oldColor.w + C)/newN;
-    imageStore(colCurr, ivec2(gl_LaunchIDEXT.xy), vec4(newAve,newN));
 
-    // @@ If the camera has moved, restart accumulation by setting (oldAve,oldN) to (0,0,0, 0)
-    // Recognize camera motion at "spin +=" in camera.cpp or "myCamera.eye +=" in app.cpp
-    // Communicate the camera modified state via a m_pcRay variable.
-    if (pcRay.cameraMoved)
+     if (pcRay.cameraMoved)
+        oldColor = vec4(0, 0, 0, 0);
+     else
+        oldColor = imageLoad(colCurr, ivec2(gl_LaunchIDEXT.xy));
+
+    vec4 screenH = (mats.priorViewProj * vec4(firstPos, 1.0)); //Project to prev buffers
+    vec2 screen = ((screenH.xy/screenH.w) + vec2(1.0)) / 2.0; //H-division and map to [0,1]
+    
+    // If first… values were not defined, OR were defined but off-screen in Prev buffers:
+    if (dot(firstPos,firstPos) == 0.0 || screen.x < 0 || screen.x > 1 || screen.y < 0 || screen.y > 1) 
     {
-         imageStore(colCurr, ivec2(gl_LaunchIDEXT.xy), vec4(0, 0, 0, 0));
+        // Restart pixels accumulation with:
+        oldColor = vec4(0, 0, 0, 0);
     }
+    else 
+    {
+        // Retrieve previous accumulation value as a selectively weighted
+        // bilinear interpolation of four neighboring pixels in colPrev buffer
+        vec2 floc = screen * gl_LaunchSizeEXT.xy - vec2(0.5);
+        vec2 off = fract(floc); // offset of current pixel between 4 neighbors.
+        ivec2 iloc = ivec2(floc); // (0,0) corner of the 4 neighbors.
+
+        // Accumulate 4 numerators(weight*color) and denominators (weights only)
+        vec4 sumC = vec4(0,0,0, 0);
+        float sumW = 0;
+        // Standard notation for the bilinear weights used in 4th parameter below
+        float x0 = 1.0-off.x, x1 = off.x, y0 = 1.0-off.y, y1 = off.y;
+        // Accumualate numerator and denominator across 4 pixels in a 2x2 pattern:
+        // See last page of document for details of accumulateSample.
+        accumulateSample(firstNrm, firstDepth, iloc+ivec2(0,0), x0*y0, sumC, sumW);
+        accumulateSample(firstNrm, firstDepth, iloc+ivec2(1,0), x1*y0, sumC, sumW);
+        accumulateSample(firstNrm, firstDepth, iloc+ivec2(0,1), x0*y1, sumC, sumW);
+        accumulateSample(firstNrm, firstDepth, iloc+ivec2(1,1), x1*y1, sumC, sumW);
+        // The interpolated history value is sumC/sumW, then split into average and count
+        // @@ Handle the denominator==0 case: Reset history with oldN=0, oldAve=(0,0,0);
+        
+        if (sumW == 0)
+        {
+             oldColor = vec4(0, 0, 0, 0);
+        }
+        else
+        {
+             vec4 historyVec = sumC/sumW;
+
+             if (pcRay.history)
+             {
+                 oldColor.w = historyVec.w;
+                oldColor.xyz = historyVec.xyz;
+             }
+           
+        }
+    }
+
+    // Accumulate new color C into old (or newly reset) history value
+    float newN = oldColor.w + 1;
+    //vec3 newAve = oldColor.xyz + (C - oldColor.xyz)/newN;
+
+    vec3 newAve = (oldColor.xyz*oldColor.w + C)/newN;
+
+    if (pcRay.alignmentTest != 1234)
+    {
+        imageStore(colCurr, ivec2(gl_LaunchIDEXT.xy), vec4(1, 0, 0, 0));
+    }
+   else
+       {
+         if (any(isnan(newAve)))
+            imageStore(colCurr, ivec2(gl_LaunchIDEXT.xy), vec4(0, 0, 0, 0));
+        else
+            imageStore(colCurr, ivec2(gl_LaunchIDEXT.xy), vec4(newAve,newN));
+       }
+
+
+    if (any(isnan(firstColor)))
+        imageStore(colCurrFront, ivec2(gl_LaunchIDEXT.xy), vec4(0, 0, 0,0));
+    else
+        imageStore(colCurrFront, ivec2(gl_LaunchIDEXT.xy), vec4(firstColor,0));
+        
+    if (any(isnan(firstNrm)) || isnan(firstDepth))
+     imageStore(colNormalDepth, ivec2(gl_LaunchIDEXT.xy), vec4(0, 0, 0, 0));
+    else
+    imageStore(colNormalDepth, ivec2(gl_LaunchIDEXT.xy), vec4(firstNrm,firstDepth));
 }

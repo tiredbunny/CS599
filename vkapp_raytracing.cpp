@@ -359,11 +359,14 @@ void VkApp::raytrace()
     m_pcRay.depth = 1;
     m_pcRay.cameraMoved = app->cameraMoved;
     m_pcRay.alignmentTest = 1234;
+
+    m_pcDenoise.normFactor = 0.003f;
+    m_pcDenoise.depthFactor = 0.007f;
+    m_pcDenoise.lumenFactor = 0.0f;
        
     ImGui::Checkbox("history", &m_pcRay.history);
 
-    ImGui::DragFloat("n_threshold", &m_pcDenoise.n_threshold, 0.01f, 0.0f, 1.0f);
-    ImGui::DragFloat("d_threshold", &m_pcDenoise.d_threshold, 0.01f, 0.0f, 1.0f);
+
     
     while (float(rand()) / RAND_MAX < m_pcRay.rr)   m_pcRay.depth++;
 
@@ -388,33 +391,7 @@ void VkApp::raytrace()
                       &m_callRegion, windowSize.width, windowSize.height, 1);
 
 
-    //// Copy the ray tracer output image to the scanline output image
-    //// -- because we already have the operations needed to display
-    //// that image on the screen.
-    //VkImageCopy imageCopyRegion{};
-    //imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    //imageCopyRegion.srcSubresource.layerCount = 1;
-    //imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    //imageCopyRegion.dstSubresource.layerCount = 1;
-    //imageCopyRegion.extent.width              = windowSize.width;
-    //imageCopyRegion.extent.height             = windowSize.height;
-    //imageCopyRegion.extent.depth              = 1;
-
-    //imageLayoutBarrier(m_commandBuffer, m_rtColCurrBuffer.image,
-    //                   VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-    //imageLayoutBarrier(m_commandBuffer, m_scImageBuffer.image,
-    //                   VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    //
-    //vkCmdCopyImage(m_commandBuffer,
-    //               m_rtColCurrBuffer.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-    //               m_scImageBuffer.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    //               1, &imageCopyRegion);
-    //
-    //imageLayoutBarrier(m_commandBuffer, m_scImageBuffer.image,
-    //                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
-    //imageLayoutBarrier(m_commandBuffer, m_rtColCurrBuffer.image,
-    //                   VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
-
+ 
     CmdCopyImage(m_rtColCurrBuffer, m_scImageBuffer);
     CmdCopyImage(m_rtColCurrBuffer, m_rtColPrevBuffer);
     CmdCopyImage(m_rtNdCurrBuffer, m_rtNdPrevBuffer);

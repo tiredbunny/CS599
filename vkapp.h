@@ -193,7 +193,7 @@ public:
     RaytracingBuilderKHR m_rtBuilder{};
     float m_maxAnis = 0;
     PushConstantRay m_pcRay{};  // Push constant for ray tracer
-    int m_num_atrous_iterations = 0;
+    int m_num_atrous_iterations = 5;
     PushConstantDenoise m_pcDenoise{};
     uint32_t handleSize{};
     uint32_t handleAlignment{};
@@ -233,6 +233,7 @@ public:
 
     // Run loop 
     bool useRaytracer = true;
+    bool doDenoise = false;
     void prepareFrame();
     void ResetRtAccumulation();
     

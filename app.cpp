@@ -25,6 +25,7 @@ void drawGUI(VkApp& VK)
                 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
     ImGui::Checkbox("Ray Tracer mode", &VK.useRaytracer);
+    ImGui::Checkbox("Denoise", &VK.doDenoise);
 }
 #endif
 

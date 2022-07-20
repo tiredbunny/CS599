@@ -28,8 +28,6 @@ constexpr integral align_up(integral x, size_t a) noexcept
 
 VkApp::VkApp(App* _app) : app(_app)
 {
-    m_pcDenoise.n_threshold = 0.95f;
-    m_pcDenoise.d_threshold = 0.15f;
 
 	createInstance(app->doApiDump);
 	assert(m_instance);
@@ -69,6 +67,10 @@ VkApp::VkApp(App* _app) : app(_app)
     createRtPipeline();
     createRtShaderBindingTable();
 
+    createDenoiseBuffer();
+    createDenoiseDescriptorSet();
+    createDenoiseCompPipeline();
+
     // //init ray tracing capabilities
     // initRayTracing();
     // createRtAccelerationStructure();
@@ -96,7 +98,11 @@ void VkApp::drawFrame()
         // Draw scene
         if (useRaytracer) {
             raytrace();
-            // denoise();
+
+            if (doDenoise) {
+                denoise();
+            }
+            
         }
         else {
             rasterize();
